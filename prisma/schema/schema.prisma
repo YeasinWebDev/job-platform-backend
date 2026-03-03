@@ -20,16 +20,18 @@ enum Role {
 }
 
 model User {
-  id         String     @id @default(uuid())
-  name       String
-  email      String     @unique
-  password   String
-  role       Role       @default(USER)
-  isVerified Boolean    @default(false)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  recruiter  Recruiter?
-  userInfo   UserInfo?
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  password     String
+  role         Role          @default(USER)
+  isVerified   Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  recruiter    Recruiter?
+  userInfo     UserInfo?
+  jobs         Job[]
+  applications Application[]
 }
 
 model Recruiter {

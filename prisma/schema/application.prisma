@@ -1,0 +1,19 @@
+enum ApplicationStatus {
+    APPLIED
+    SHORTLISTED
+    REJECTED
+}
+
+model Application {
+    id        String            @id @default(uuid())
+    createdAt DateTime          @default(now())
+    status    ApplicationStatus @default(APPLIED)
+
+    userId String
+    user   User   @relation(fields: [userId], references: [id])
+
+    jobId String
+    job   Job    @relation(fields: [jobId], references: [id])
+
+    @@unique([userId, jobId]) // prevent double apply
+}

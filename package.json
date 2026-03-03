@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "prisma": {
+    "schema": "./prisma/schema",
+    "engines": {
+      "queryEngineType": "binary"
+    }
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1"

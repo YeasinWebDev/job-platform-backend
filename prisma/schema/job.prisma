@@ -1,0 +1,41 @@
+enum JobStatus {
+    PENDING_PAYMENT
+    ACTIVE
+    EXPIRED
+}
+
+enum JobContractType {
+    FULLTIME
+    PARTTIME
+    INTERNSHIP
+}
+
+enum JobType {
+    REMOTE
+    ONSITE
+}
+
+model Job {
+    id                 String          @id @default(uuid())
+    title              String
+    description        String[]
+    Who_can_apply      String?
+    Other_requirements String?
+    benefits           String?
+    salary             String
+    location           String
+    startDate          DateTime
+    skills             String[]
+    numberOfVacancies  Int
+    Duration           String
+    jobType            JobType         @default(ONSITE)
+    contract           JobContractType @default(FULLTIME)
+    status             JobStatus       @default(PENDING_PAYMENT)
+    createdAt          DateTime        @default(now())
+    expiresAt          DateTime?
+
+    applications Application[]
+    //   payment       Payment?
+    user         User?         @relation(fields: [userId], references: [id])
+    userId       String?
+}
