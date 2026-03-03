@@ -20,22 +20,22 @@ enum Role {
 }
 
 model User {
-  id         String      @id @default(uuid())
+  id         String     @id @default(uuid())
   name       String
-  email      String      @unique
+  email      String     @unique
   password   String
-  role       Role        @default(USER)
-  isVerified Boolean     @default(false)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  recruiters Recruiter[]
-  userInfos  UserInfo[]
+  role       Role       @default(USER)
+  isVerified Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  recruiter  Recruiter?
+  userInfo   UserInfo?
 }
 
 model Recruiter {
   id        String   @id @default(uuid())
   user      User     @relation(fields: [userId], references: [id])
-  userId    String
+  userId    String   @unique
   about     String
   name      String
   image     String
@@ -50,7 +50,7 @@ model Recruiter {
 model UserInfo {
   id        String   @id @default(uuid())
   user      User     @relation(fields: [userId], references: [id])
-  userId    String
+  userId    String   @unique
   about     String
   image     String
   website   String
