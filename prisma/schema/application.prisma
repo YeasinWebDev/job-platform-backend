@@ -15,5 +15,5 @@ model Application {
     jobId String
     job   Job    @relation(fields: [jobId], references: [id])
 
-    @@unique([userId, jobId]) // prevent double apply
+    @@unique([userId, jobId]) 
 }
