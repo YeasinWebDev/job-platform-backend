@@ -32,6 +32,7 @@ model User {
   userInfo     UserInfo?
   jobs         Job[]
   applications Application[]
+  payments     Payment[]
 }
 
 model Recruiter {

@@ -1,0 +1,22 @@
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+
+
+model Payment {
+  id              String        @id @default(uuid())
+  stripeSessionId String        @unique
+  amount          Int
+  status          PaymentStatus @default(PENDING)
+  createdAt       DateTime      @default(now())
+
+  companyId       String
+  company         User          @relation(fields: [companyId], references: [id])
+
+  jobId           String        @unique
+  job             Job           @relation(fields: [jobId], references: [id])
+}

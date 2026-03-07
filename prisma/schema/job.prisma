@@ -38,4 +38,5 @@ model Job {
     //   payment       Payment?
     user         User?         @relation(fields: [userId], references: [id])
     userId       String?
+    payment      Payment?
 }
