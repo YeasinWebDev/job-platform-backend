@@ -9,10 +9,10 @@ enum PaymentStatus {
 
 model Payment {
   id              String        @id @default(uuid())
-  stripeSessionId String        @unique
+  stripeSessionId String?        @unique
   amount          Int
   status          PaymentStatus @default(PENDING)
-  createdAt       DateTime      @default(now())
+  createdAt       DateTime      @default(now()) 
 
   companyId       String
   company         User          @relation(fields: [companyId], references: [id])
