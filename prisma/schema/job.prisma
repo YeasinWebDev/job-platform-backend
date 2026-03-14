@@ -15,6 +15,13 @@ enum JobType {
     ONSITE
 }
 
+enum ExperienceLevel {
+    Entry
+    Mid
+    Senior
+    Lead
+}
+
 model Job {
     id                 String          @id @default(uuid())
     title              String
@@ -22,8 +29,11 @@ model Job {
     Who_can_apply      String?
     Other_requirements String?
     benefits           String?
-    salary             String
+    minSalary          String
+    maxSalary          String
     location           String
+    categoryId         String
+    experienceLevel    ExperienceLevel
     startDate          DateTime
     skills             String[]
     numberOfVacancies  Int
@@ -37,6 +47,13 @@ model Job {
     applications Application[]
     //   payment       Payment?
     user         User?         @relation(fields: [userId], references: [id])
+    Category     Category      @relation(fields: [categoryId], references: [id])
     userId       String?
     payment      Payment?
+}
+
+model Category {
+    id   String @id @default(uuid())
+    name String
+    jobs Job[]
 }
