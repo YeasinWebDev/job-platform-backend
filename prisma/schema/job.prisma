@@ -26,8 +26,8 @@ model Job {
     id                 String          @id @default(uuid())
     title              String
     description        String[]
-    Who_can_apply      String?
-    Other_requirements String?
+    Who_can_apply      String
+    Other_requirements String[]
     benefits           String?
     minSalary          String
     maxSalary          String
@@ -43,12 +43,12 @@ model Job {
     status             JobStatus       @default(PENDING_PAYMENT)
     createdAt          DateTime        @default(now())
     expiresAt          DateTime?
+    recruiterId        String
 
     applications Application[]
     //   payment       Payment?
-    user         User?         @relation(fields: [userId], references: [id])
     Category     Category      @relation(fields: [categoryId], references: [id])
-    userId       String?
+    recruiter    Recruiter     @relation(fields: [recruiterId], references: [id])
     payment      Payment?
 }
 
