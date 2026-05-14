@@ -24,6 +24,21 @@ const registerUser = async (req: Request, res: Response) => {
   const user = await prisma.user.create({
     data: req.body,
   });
+
+  if (user.role === "RECRUITER") {
+    await prisma.recruiter.create({
+      data: {
+        userId: user.id,
+      },
+    });
+  } else if (user.role === "USER") {
+    await prisma.userInfo.create({
+      data: {
+        userId: user.id,
+      },
+    });
+  }
+
   const accessToken = await generateToken({ email, role: user.role });
 
   return { ...accessToken, user };
@@ -50,40 +65,37 @@ const loginUser = async (req: Request, res: Response) => {
   return { ...accessToken, user: isUserExist };
 };
 
-const sendVerificationEmail = async(email: string) => {
-  
+const sendVerificationEmail = async (email: string) => {
   const subject = "Verify your email address";
 
   const verifycode = Math.floor(100000 + Math.random() * 900000).toString();
 
-  client.set(email, verifycode , {EX: 600});
+  client.set(email, verifycode, { EX: 600 });
 
   await emailSender(email, subject, verifycode);
-  return true
+  return true;
 };
 
-const verifyEmail = async(email: string, code: string)=>{
-
+const verifyEmail = async (email: string, code: string) => {
   const verifycode = await client.get(email);
-  if(verifycode === code){
+  if (verifycode === code) {
     await prisma.user.update({
       where: {
-        email
+        email,
       },
       data: {
-        isVerified: true
-      }
+        isVerified: true,
+      },
     });
     client.del(email);
     return true;
   }
-  return false
-}
-
+  return false;
+};
 
 export const authService = {
   registerUser,
   loginUser,
   sendVerificationEmail,
-  verifyEmail
+  verifyEmail,
 };

@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { jobService } from "./job.service.js";
 import AppError from "../../helper/appError.js";
 import sendResponse from "../../shared/sendResponse.js";
-import type { JobContractType, JobType } from "@prisma/client";
+import type { ExperienceLevel, JobContractType, JobType } from "@prisma/client";
 
 const createJob = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) throw new AppError("User not found", 400);
@@ -34,12 +34,18 @@ const applyForJob = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-
 const myApplications = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) throw new AppError("User not found", 400);
   try {
-    const { limit, page, search, orderBy, contractType } = req.query;
-    const result = await jobService.myApplications(req.user.id, parseInt(limit as string), parseInt(page as string), search as string, orderBy as JobType, contractType as JobContractType);
+    const { limit = "10", page = "1", search = "", orderBy, contractType } = req.query;
+    const result = await jobService.myApplications(
+      req.user.id,
+      parseInt(limit as string) || 10,
+      parseInt(page as string) || 1,
+      search as string,
+      orderBy as JobType,
+      contractType as JobContractType,
+    );
     sendResponse(res, {
       statusCode: 200,
       success: true,
@@ -54,8 +60,15 @@ const myApplications = async (req: Request, res: Response, next: NextFunction) =
 const myCreatedJobs = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) throw new AppError("User not found", 400);
   try {
-    const { limit, page, search, orderBy, contractType } = req.query;
-    const result = await jobService.myCreatedJobs(req.user.id, parseInt(limit as string), parseInt(page as string), search as string, orderBy as JobType, contractType as JobContractType);
+    const { limit = "10", page = "1", search = "", orderBy, contractType } = req.query;
+    const result = await jobService.myCreatedJobs(
+      req.user.id,
+      parseInt(limit as string) || 10,
+      parseInt(page as string) || 1,
+      search as string,
+      orderBy as JobType,
+      contractType as JobContractType,
+    );
     sendResponse(res, {
       statusCode: 200,
       success: true,
@@ -66,7 +79,6 @@ const myCreatedJobs = async (req: Request, res: Response, next: NextFunction) =>
     next(error);
   }
 };
-
 
 const updateJob = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) throw new AppError("User not found", 400);
@@ -98,11 +110,22 @@ const updateJobStatus = async (req: Request, res: Response, next: NextFunction) 
   }
 };
 
-
 const getJobs = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { limit, page, search, orderBy, contractType } = req.query;
-    const result = await jobService.getJobs(parseInt(limit as string), parseInt(page as string), search as string, orderBy as JobType, contractType as JobContractType);
+    const { limit = "10", page = "1", search = "", location = "", category = "", experience = "", jobType, contact, salaryMin = "", salaryMax = "", datePosted } = req.query;
+    const result = await jobService.getJobs(
+      parseInt(limit as string) || 10,
+      parseInt(page as string) || 1,
+      search as string,
+      location as string,
+      jobType as JobType,
+      category as string,
+      experience as ExperienceLevel,
+      contact as string,
+      salaryMin as string,
+      salaryMax as string,
+      datePosted as string,
+    );
     sendResponse(res, {
       statusCode: 200,
       success: true,

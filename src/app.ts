@@ -8,6 +8,7 @@ import { jobRoutes } from "./modules/job/job.route.js";
 import { paymentRoutes } from "./modules/payment/payment.route.js";
 import { paymentController } from "./modules/payment/payment.controller.js";
 import { categoryRoutes } from "./modules/category/category.route.js";
+import { userRoutes } from "./modules/user/user.route.js";
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use(cookieParser());
 
 // Routes
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/job", jobRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/category", categoryRoutes);

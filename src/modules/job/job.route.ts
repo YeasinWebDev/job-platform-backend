@@ -17,7 +17,7 @@ jobRoutes.put("/update-job/:id", checkAuth(Role.RECRUITER, Role.ADMIN), jobContr
 
 jobRoutes.put("/update-job-status/:id", checkAuth(Role.RECRUITER, Role.ADMIN), jobController.updateJobStatus);
 
-jobRoutes.get("/jobs", jobController.getJobs);
+jobRoutes.get("/", jobController.getJobs);
 
 jobRoutes.get("/job/:id", jobController.getJob);
 
