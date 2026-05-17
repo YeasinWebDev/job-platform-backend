@@ -25,12 +25,12 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
       data: result,
     });
   } catch (error) {
-    next(error);
+    next(error); 
   }
 };
 export const updateProfileInfo = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await userService.updateProfileInfo(req.user!.id, req.body);
+    const result = await userService.updateProfileInfo(req.user!.email, req.body);
     sendResponse(res, {
       statusCode: 200,
       success: true,

@@ -1,59 +1,57 @@
-enum JobStatus {
-    PENDING_PAYMENT
-    ACTIVE
-    EXPIRED
-}
-
-enum JobContractType {
-    FULLTIME
-    PARTTIME
-    INTERNSHIP
-}
-
-enum JobType {
-    REMOTE
-    ONSITE
-}
-
-enum ExperienceLevel {
-    Entry
-    Mid
-    Senior
-    Lead
-}
-
 model Job {
-    id                 String          @id @default(uuid())
-    title              String
-    description        String[]
-    Who_can_apply      String
-    Other_requirements String[]
-    benefits           String?
-    minSalary          String
-    maxSalary          String
-    location           String
-    categoryId         String
-    experienceLevel    ExperienceLevel
-    startDate          DateTime
-    skills             String[]
-    numberOfVacancies  Int
-    Duration           String
-    jobType            JobType         @default(ONSITE)
-    contract           JobContractType @default(FULLTIME)
-    status             JobStatus       @default(PENDING_PAYMENT)
-    createdAt          DateTime        @default(now())
-    expiresAt          DateTime?
-    recruiterId        String
-
-    applications Application[]
-    //   payment       Payment?
-    Category     Category      @relation(fields: [categoryId], references: [id])
-    recruiter    Recruiter     @relation(fields: [recruiterId], references: [id])
-    payment      Payment?
+  id                 String          @id @default(uuid())
+  title              String
+  description        String[]
+  Who_can_apply      String
+  benefits           String?
+  location           String
+  startDate          DateTime
+  skills             String[]
+  numberOfVacancies  Int
+  Duration           String
+  jobType            JobType         @default(ONSITE)
+  contract           JobContractType @default(FULLTIME)
+  status             JobStatus       @default(PENDING_PAYMENT)
+  createdAt          DateTime        @default(now())
+  expiresAt          DateTime?
+  categoryId         String
+  experienceLevel    ExperienceLevel
+  maxSalary          String
+  minSalary          String
+  Other_requirements String[]
+  recruiterId        String
+  applications       Application[]
+  Category           Category        @relation(fields: [categoryId], references: [id])
+  recruiter          Recruiter       @relation(fields: [recruiterId], references: [id])
+  payment            Payment?
 }
 
 model Category {
-    id   String @id @default(uuid())
-    name String
-    jobs Job[]
+  id   String @id @default(uuid())
+  name String
+  jobs Job[]
+}
+
+enum JobStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  EXPIRED
+}
+
+enum JobContractType {
+  FULLTIME
+  PARTTIME
+  INTERNSHIP
+}
+
+enum JobType {
+  REMOTE
+  ONSITE
+}
+
+enum ExperienceLevel {
+  Entry
+  Mid
+  Senior
+  Lead
 }

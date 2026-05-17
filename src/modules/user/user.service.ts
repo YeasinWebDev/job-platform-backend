@@ -21,8 +21,8 @@ const deleteUser = async (userId: string) => {
   return result;
 };
 
-const updateProfileInfo = async (userId: string, body: any) => {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+const updateProfileInfo = async (email: string, body: any) => {
+  const user = await prisma.user.findUnique({ where: { email } }); 
 
   if (!user) {
     throw new AppError("User not found", 400);
@@ -33,8 +33,8 @@ const updateProfileInfo = async (userId: string, body: any) => {
   // update base user (only if name exists)
   if (name) {
     await prisma.user.update({
-      where: { id: userId },
-      data: { name },
+      where: { email},
+      data: { name }, 
     });
   }
 
@@ -43,14 +43,14 @@ const updateProfileInfo = async (userId: string, body: any) => {
       about: rest.about,
       companyName: rest.companyName,
       companyImage: rest.companyImage,
-      website: rest.website,
-      location: rest.location,
-      phone: rest.phone,
+      website: rest.recruiterWebsite,
+      location: rest.recruiterLocation,
+      phone: rest.recruiterPhone,
     };
 
     return await prisma.recruiter.update({
-      where: { userId },
-      data: allowedData,
+      where: { userId: user.id },
+      data: allowedData, 
     });
   }
 
@@ -67,7 +67,7 @@ const updateProfileInfo = async (userId: string, body: any) => {
     };
 
     return await prisma.userInfo.update({
-      where: { userId },
+      where: { userId: user.id },
       data: allowedData,
     });
   }

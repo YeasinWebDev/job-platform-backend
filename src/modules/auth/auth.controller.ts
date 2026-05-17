@@ -50,8 +50,9 @@ const sendVerificationEmail = async (req: Request, res: Response, next: NextFunc
 
 const verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, code } = req.body;
-    const result = await authService.verifyEmail(email, code);
+    const { code } = req.body;
+    const user = req.user as JwtPayload;
+    const result = await authService.verifyEmail(user.email, code);
     sendResponse(res, {
       statusCode: 200,
       success: true,

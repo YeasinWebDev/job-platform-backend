@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,12 +5,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-enum Role {
-  USER
-  RECRUITER
-  ADMIN
 }
 
 model User {
@@ -28,30 +16,29 @@ model User {
   isVerified   Boolean       @default(false)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  applications Application[]
   recruiter    Recruiter?
   userInfo     UserInfo?
-  applications Application[]
 }
 
 model Recruiter {
-  id           String    @id @default(uuid())
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade )
-  userId       String    @unique
+  id           String   @id @default(uuid())
+  userId       String   @unique
   about        String?
-  companyName  String?
-  companyImage String?
   website      String?
   location     String?
   phone        String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  companyImage String?
+  companyName  String?
   jobs         Job[]
-  payments     Payment[]
+  payments     Payment?
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserInfo {
   id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id] , onDelete: Cascade )
   userId    String   @unique
   about     String?
   image     String?
@@ -60,7 +47,14 @@ model UserInfo {
   phone     String?
   linkedin  String?
   github    String?
-  resume    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  resume    String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  USER
+  RECRUITER
+  ADMIN
 }

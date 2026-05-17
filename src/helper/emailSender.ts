@@ -61,7 +61,7 @@ const verificationEmailTemplate = (code: string) => `
 
     <tr>
       <td style="background:#f9fafb; padding:20px; text-align:center; font-size:12px; color:#999;">
-        © ${new Date().getFullYear()} Your Company. All rights reserved.
+        © ${new Date().getFullYear()} hirePeople. All rights reserved.
       </td>
     </tr>
 
