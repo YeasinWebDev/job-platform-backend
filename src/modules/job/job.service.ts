@@ -1,9 +1,57 @@
 import type { ExperienceLevel, Job, JobContractType, JobStatus, JobType } from "@prisma/client";
 import prisma from "../../config/prisma.js";
+import { normalizeContract } from "../../utils/index.js";
+import AppError from "../../helper/appError.js";
 
-const createJob = async (userId: string, body: Job) => {
-  body.recruiterId = userId;
-  const result = await prisma.job.create({ data: body });
+const createJob = async (email: string, body: Job) => {
+  const recruiter = await prisma.recruiter.findUnique({ where: { userId: body.recruiterId } });
+  if (!recruiter) throw new AppError("Recruiter not found", 404);
+
+  const result = await prisma.job.create({
+    data: {
+      title: body.title,
+
+      description: body.description,
+
+      Who_can_apply: body.Who_can_apply,
+
+      benefits: body.benefits,
+
+      location: body.location,
+
+      startDate: body.startDate ? body.startDate : "",
+      expiresAt: body.expiresAt ? body.expiresAt : "",
+
+      skills: body.skills,
+
+      numberOfVacancies: body.numberOfVacancies,
+
+      Duration: body.Duration,
+
+      jobType: body.jobType,
+
+      contract: body.contract,
+
+      status: body.status,
+
+      experienceLevel: body.experienceLevel,
+
+      maxSalary: body.maxSalary,
+
+      minSalary: body.minSalary,
+
+      other_requirements: body.other_requirements,
+
+      recruiter: {
+        connect: { id: recruiter.id },
+      },
+
+      category: {
+        connect: { id: body.categoryId },
+      },
+    },
+  });
+
   return result;
 };
 
@@ -60,7 +108,19 @@ const updateJobStatus = async (id: string, status: JobStatus) => {
   return result;
 };
 
-const getJobs = async (limit: number, page: number, search: string, location: string, jobType: JobType, category: string, experience: ExperienceLevel, contact: string, salaryMin: string, salaryMax: string, datePosted: string) => {
+const getJobs = async (
+  limit: number,
+  page: number,
+  search: string,
+  location: string,
+  jobType: JobType,
+  category: string,
+  experience: ExperienceLevel,
+  contact: string,
+  salaryMin: string,
+  salaryMax: string,
+  datePosted: string,
+) => {
   const minSalaryNum = salaryMin ? parseInt(salaryMin) : 0;
   const maxSalaryNum = salaryMax ? parseInt(salaryMax) : Infinity;
 
@@ -68,7 +128,7 @@ const getJobs = async (limit: number, page: number, search: string, location: st
   let createdAtFilter: any = {};
   const now = new Date();
 
-  if (datePosted && datePosted !== "any") {
+  if (datePosted && datePosted !== "any-time") {
     if (datePosted === "past-24") {
       const past24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       createdAtFilter = { gte: past24h };
@@ -84,36 +144,105 @@ const getJobs = async (limit: number, page: number, search: string, location: st
     }
   }
 
+  const contractValues = contact
+    ? contact
+        .split(",") // example: "fulltime,parttime"
+        .map((c) => normalizeContract(c))
+        .filter((c): c is JobContractType => Boolean(c))
+    : [];
+
+  const experienceValues = experience
+    ? experience
+        .split(",") // example: "entry,mid,senior"
+        .filter((e): e is ExperienceLevel => Boolean(e))
+    : [];
+
+  const whereClause = {
+    title: {
+      contains: search,
+    },
+    ...(jobType && { jobType }),
+    ...(location && { location: { contains: location } }),
+    ...(category && { categoryId: category }),
+    ...(experienceValues.length > 0 && {
+      experienceLevel: { in: experienceValues },
+    }),
+    ...(contractValues.length > 0 && {
+      contract: { in: contractValues },
+    }),
+    ...(Object.keys(createdAtFilter).length > 0 && {
+      createdAt: createdAtFilter,
+    }),
+  };
+
   const jobs = await prisma.job.findMany({
-    take: limit,
-    skip: (page - 1) * limit,
-    where: {
-      title: {
-        contains: search,
+    // take: limit,
+    // skip: (page - 1) * limit,
+    where: whereClause,
+    include: {
+      recruiter: {
+        select: {
+          id: true,
+          userId: true,
+          about: true,
+          companyName: true,
+          companyImage: true,
+          website: true,
+          location: true,
+          phone: true,
+          createdAt: true,
+          updatedAt: true,
+
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
       },
-      ...(location && { location: { contains: location } }),
-      ...(category && { categoryId: category }),
-      ...(experience && { experienceLevel: experience }),
-      ...(Object.keys(createdAtFilter).length > 0 && { createdAt: createdAtFilter }),
     },
     orderBy: {
-      [jobType || "createdAt"]: "desc",
+      ["createdAt"]: "desc",
     },
   });
 
-  // Filter by salary range in application code since salary is stored as string
-  const result = jobs.filter((job) => {
+  // STEP 2: salary filter
+  const filtered = jobs.filter((job) => {
     const jobMinSalary = parseInt(job.minSalary) || 0;
-    const jobMaxSalary = parseInt(job.maxSalary) || Infinity;
+    const jobMaxSalary = parseInt(job.maxSalary) || Number.MAX_SAFE_INTEGER;
+
     return jobMinSalary <= maxSalaryNum && jobMaxSalary >= minSalaryNum;
   });
 
-  return result;
+  const total = filtered.length;
+
+  const paginatedJobs = filtered.slice((page - 1) * limit, page * limit);
+
+  return {
+    jobs: paginatedJobs,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 };
 
 const getJob = async (id: string) => {
   const result = await prisma.job.findUnique({ where: { id } });
-  return result;
+
+  if (!result) throw new AppError("Job not found", 404);
+
+  const recruiter = await prisma.recruiter.findUnique({
+    where: { id: result?.recruiterId },
+  });
+
+  const ans = { ...result, recruiter: recruiter };
+
+  return ans;
 };
 
 const deleteJob = async (id: string) => {

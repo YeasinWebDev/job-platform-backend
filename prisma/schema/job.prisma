@@ -14,15 +14,19 @@ model Job {
   status             JobStatus       @default(PENDING_PAYMENT)
   createdAt          DateTime        @default(now())
   expiresAt          DateTime?
+
   categoryId         String
+  category           Category        @relation(fields: [categoryId], references: [id])
+
   experienceLevel    ExperienceLevel
   maxSalary          String
   minSalary          String
-  Other_requirements String[]
+  other_requirements String[]
+
   recruiterId        String
-  applications       Application[]
-  Category           Category        @relation(fields: [categoryId], references: [id])
   recruiter          Recruiter       @relation(fields: [recruiterId], references: [id])
+
+  applications       Application[]
   payment            Payment?
 }
 

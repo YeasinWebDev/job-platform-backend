@@ -9,7 +9,7 @@ export const checkAuth =
     const accessToken = req.headers.authorization || req.headers.cookie;
   
     try {
-      const decoded = verifyToken(accessToken!);
+      const decoded = verifyToken(accessToken!); 
 
       const isUserExist = await prisma.user.findUnique({
         where: {

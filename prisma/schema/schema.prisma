@@ -33,7 +33,7 @@ model Recruiter {
   companyImage String?
   companyName  String?
   jobs         Job[]
-  payments     Payment?
+  payments     Payment[]
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 

@@ -5,12 +5,16 @@ const getMe = async (email: string) => {
   const result = await prisma.user.findUnique({ where: { email } });
   if (!result) throw new AppError("User not found", 400);
 
+
   if (result.role === "RECRUITER") {
     const recruiter = await prisma.recruiter.findUnique({ where: { userId: result.id } });
     return { ...result, recruiter };
-  }else if (result.role === "USER") {
+  } else if (result.role === "USER") {
     const userInfo = await prisma.userInfo.findUnique({ where: { userId: result.id } });
-    return { ...result, userInfo };
+    const applications = await prisma.application.findMany({
+      where: { userId: result.id },
+    });
+    return { ...result, applications, userInfo };
   }
 
   return result;
@@ -22,7 +26,7 @@ const deleteUser = async (userId: string) => {
 };
 
 const updateProfileInfo = async (email: string, body: any) => {
-  const user = await prisma.user.findUnique({ where: { email } }); 
+  const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
     throw new AppError("User not found", 400);
@@ -33,8 +37,8 @@ const updateProfileInfo = async (email: string, body: any) => {
   // update base user (only if name exists)
   if (name) {
     await prisma.user.update({
-      where: { email},
-      data: { name }, 
+      where: { email },
+      data: { name },
     });
   }
 
@@ -50,7 +54,7 @@ const updateProfileInfo = async (email: string, body: any) => {
 
     return await prisma.recruiter.update({
       where: { userId: user.id },
-      data: allowedData, 
+      data: allowedData,
     });
   }
 

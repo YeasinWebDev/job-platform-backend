@@ -4,9 +4,11 @@ model Payment {
   amount          Int
   status          PaymentStatus @default(PENDING)
   createdAt       DateTime      @default(now())
+
   companyId       String
   jobId           String        @unique
-  company         Recruiter     @relation(fields: [id], references: [id])
+
+  company         Recruiter     @relation(fields: [companyId], references: [id])
   job             Job           @relation(fields: [jobId], references: [id])
 }
 

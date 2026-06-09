@@ -7,7 +7,7 @@ import type { ExperienceLevel, JobContractType, JobType } from "@prisma/client";
 const createJob = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) throw new AppError("User not found", 400);
   try {
-    const result = await jobService.createJob(req.user.id, req.body);
+    const result = await jobService.createJob(req.user.email, req.body);
     sendResponse(res, {
       statusCode: 200,
       success: true,
@@ -112,13 +112,14 @@ const updateJobStatus = async (req: Request, res: Response, next: NextFunction) 
 
 const getJobs = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { limit = "10", page = "1", search = "", location = "", category = "", experience = "", jobType, contact, salaryMin = "", salaryMax = "", datePosted } = req.query;
+    const { limit = "6", page = "1", search = "", location = "", category = "", experience = "", jobType = "", contact, salaryMin = "", salaryMax = "", datePosted } = req.query;
+
     const result = await jobService.getJobs(
       parseInt(limit as string) || 10,
       parseInt(page as string) || 1,
       search as string,
       location as string,
-      jobType as JobType,
+      (jobType as string).toUpperCase() as JobType,
       category as string,
       experience as ExperienceLevel,
       contact as string,
@@ -139,6 +140,7 @@ const getJobs = async (req: Request, res: Response, next: NextFunction) => {
 
 const getJob = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log(req.params.id)
     const result = await jobService.getJob(String(req.params.id));
     sendResponse(res, {
       statusCode: 200,
