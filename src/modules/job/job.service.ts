@@ -1,4 +1,4 @@
-import type { ExperienceLevel, Job, JobContractType, JobStatus, JobType } from "@prisma/client";
+import { JobStatus, type ExperienceLevel, type Job, type JobContractType, type JobType } from "@prisma/client";
 import prisma from "../../config/prisma.js";
 import { normalizeContract } from "../../utils/index.js";
 import AppError from "../../helper/appError.js";
@@ -80,25 +80,59 @@ const myApplications = async (userId: string, limit: number, page: number, searc
   return result;
 };
 
-const myCreatedJobs = async (userId: string, limit: number, page: number, search: string, orderBy: JobType, contractType: JobContractType) => {
+const myCreatedJobs = async (email: string, limit: number, page: number, search: string, orderBy: JobType, contractType: JobContractType) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw new AppError("User not found", 404);
+
+  const recruiter = await prisma.recruiter.findUnique({ where: { userId: user.id } });
+  if (!recruiter) throw new AppError("Recruiter not found", 404);
+
   const result = await prisma.job.findMany({
     take: limit,
     skip: (page - 1) * limit,
     where: {
       title: {
         contains: search,
+        mode: "insensitive",
       },
+      isDeleted: false,
       ...(contractType && { contract: contractType }),
-      userId,
+      recruiterId: recruiter.id,
     },
     orderBy: {
-      [orderBy]: "desc",
+      [orderBy || "createdAt"]: "desc",
+    },
+    include: {
+      applications: true,
     },
   });
-  return result;
+  const total = await prisma.job.count({
+    where: {
+      title: {
+        contains: search,
+      },
+      isDeleted: false,
+      ...(contractType && { contract: contractType }),
+      recruiterId: recruiter.id,
+    },
+  });
+  const meta = {
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
+  return { jobs: result, meta };
 };
 
-const updateJob = async (id: string, body: Job) => {
+const updateJob = async (recruiterId: string, id: string, body: Job) => {
+  const isMyJob = await prisma.job.findUnique({
+    where: { id },
+  });
+  
+  if (!isMyJob) throw new AppError("Job not found", 404);
+  if (isMyJob.recruiterId !== recruiterId) throw new AppError("You can only update your own jobs", 400);
+
   const result = await prisma.job.update({ where: { id }, data: body });
   return result;
 };
@@ -107,6 +141,81 @@ const updateJobStatus = async (id: string, status: JobStatus) => {
   const result = await prisma.job.update({ where: { id }, data: { status } });
   return result;
 };
+
+const bookmarkJob = async (email:string,jobId:string) => {
+  const isUser = await prisma.user.findUnique({where:{email}})
+  if(!isUser) throw new AppError("User not found",404)
+  
+  const isJob = await prisma.job.findUnique({where:{id:jobId}})
+  if(!isJob) throw new AppError("Job not found",404)
+
+  const isBookmarked = await prisma.job.findUnique({
+    where:{
+      id:jobId,
+      bookmarkedBy:{
+        some:{id:isUser.id}
+      }
+    }
+  })
+
+  if(isBookmarked) throw new AppError("Job already bookmarked",400)
+
+  const result = await prisma.job.update({
+    where:{id:jobId},
+    data:{
+      bookmarkedBy:{
+        connect:{id:isUser.id}
+      }
+    }
+  })
+  return result
+}
+
+const getMyBookmarkedJobs = async (email:string)=>{
+  const user = await prisma.user.findUnique({where:{email}})
+  if(!user) throw new AppError("User not found",404)
+
+  const result = await prisma.job.findMany({
+    where:{
+      bookmarkedBy:{
+        some:{id:user.id}
+      }
+    },
+    include:{
+      recruiter:true
+    }
+  })
+  return result
+}
+
+const removeMyBookmarkedJob = async (email:string,jobId:string) =>{
+  const isUser = await prisma.user.findUnique({where:{email}})
+  if(!isUser) throw new AppError("User not found",404)
+
+  const isJob = await prisma.job.findUnique({where:{id:jobId}})
+  if(!isJob) throw new AppError("Job not found",404)
+
+  const isBookmarked = await prisma.job.findUnique({
+    where:{
+      id:jobId,
+      bookmarkedBy:{
+        some:{id:isUser.id}
+      }
+    }
+  })
+
+  if(!isBookmarked) throw new AppError("Job not bookmarked",404)
+
+  const result = await prisma.job.update({
+    where:{id:jobId},
+    data:{
+      bookmarkedBy:{
+        disconnect:{id:isUser.id}
+      }
+    }
+  })
+  return result
+}
 
 const getJobs = async (
   limit: number,
@@ -161,6 +270,8 @@ const getJobs = async (
     title: {
       contains: search,
     },
+    isDeleted: false,
+    status: JobStatus.ACTIVE,
     ...(jobType && { jobType }),
     ...(location && { location: { contains: location } }),
     ...(category && { categoryId: category }),
@@ -202,6 +313,11 @@ const getJobs = async (
           },
         },
       },
+      bookmarkedBy:{
+        select:{
+          id:true,
+        }
+      }
     },
     orderBy: {
       ["createdAt"]: "desc",
@@ -236,8 +352,15 @@ const getJob = async (id: string) => {
 
   if (!result) throw new AppError("Job not found", 404);
 
-  const recruiter = await prisma.recruiter.findUnique({
-    where: { id: result?.recruiterId },
+  const recruiter = await prisma.job.findUnique({
+    where: { id },
+    include:{
+      bookmarkedBy:{
+        select:{
+          id:true,
+        } 
+      }
+    }
   });
 
   const ans = { ...result, recruiter: recruiter };
@@ -246,7 +369,7 @@ const getJob = async (id: string) => {
 };
 
 const deleteJob = async (id: string) => {
-  const result = await prisma.job.delete({ where: { id } });
+  const result = await prisma.job.update({ where: { id }, data: { isDeleted: true } });
   return result;
 };
 
@@ -260,4 +383,7 @@ export const jobService = {
   getJobs,
   getJob,
   deleteJob,
+  bookmarkJob,
+  getMyBookmarkedJobs,
+  removeMyBookmarkedJob,
 };

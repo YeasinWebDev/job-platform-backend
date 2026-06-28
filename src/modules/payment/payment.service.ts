@@ -12,7 +12,7 @@ const createPaymentIntent = async (email: string, amount: number, jobId: string)
     data: {
       amount,
       jobId,
-      companyId: isJobExist.userId!,
+      companyId: isJobExist.recruiterId!, 
     },
   });
 

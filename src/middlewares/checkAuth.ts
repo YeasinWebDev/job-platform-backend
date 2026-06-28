@@ -6,7 +6,7 @@ import AppError from "../helper/appError.js";
 export const checkAuth =
   (...authRoles: string[]) =>
   async (req: Request, res: Response, next: NextFunction) => {
-    const accessToken = req.headers.authorization || req.headers.cookie;
+    const accessToken = req.headers.authorization?.split(" ")[1] || req.headers.cookie;
   
     try {
       const decoded = verifyToken(accessToken!); 

@@ -8,33 +8,35 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  name         String
-  email        String        @unique
-  password     String
-  role         Role          @default(USER)
-  isVerified   Boolean       @default(false)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  applications Application[]
-  recruiter    Recruiter?
-  userInfo     UserInfo?
+  id             String        @id @default(uuid())
+  name           String
+  email          String        @unique
+  password       String
+  role           Role          @default(USER)
+  isVerified     Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  
+  applications   Application[]
+  bookmarkJobs   Job[]         @relation("BookmarkedJobs")
+  recruiter      Recruiter?
+  userInfo       UserInfo?
 }
 
 model Recruiter {
-  id           String   @id @default(uuid())
-  userId       String   @unique
+  id           String    @id @default(uuid())
+  userId       String    @unique
   about        String?
   website      String?
   location     String?
   phone        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   companyImage String?
   companyName  String?
   jobs         Job[]
   payments     Payment[]
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserInfo {

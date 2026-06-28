@@ -3,6 +3,7 @@ import { jobService } from "./job.service.js";
 import AppError from "../../helper/appError.js";
 import sendResponse from "../../shared/sendResponse.js";
 import type { ExperienceLevel, JobContractType, JobType } from "@prisma/client";
+import prisma from "../../config/prisma.js";
 
 const createJob = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) throw new AppError("User not found", 400);
@@ -21,8 +22,11 @@ const createJob = async (req: Request, res: Response, next: NextFunction) => {
 
 const applyForJob = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) throw new AppError("User not found", 400);
+  const userInfo = await prisma.user.findUnique({ where: { email: req.user.email } });
+  if (!userInfo) throw new AppError("User not found", 404);
+
   try {
-    const result = await jobService.applyForJob(req.user.id, req.body.jobId);
+    const result = await jobService.applyForJob(userInfo.id, req.body.jobId);
     sendResponse(res, {
       statusCode: 200,
       success: true,
@@ -62,7 +66,7 @@ const myCreatedJobs = async (req: Request, res: Response, next: NextFunction) =>
   try {
     const { limit = "10", page = "1", search = "", orderBy, contractType } = req.query;
     const result = await jobService.myCreatedJobs(
-      req.user.id,
+      req.user.email,
       parseInt(limit as string) || 10,
       parseInt(page as string) || 1,
       search as string,
@@ -83,7 +87,7 @@ const myCreatedJobs = async (req: Request, res: Response, next: NextFunction) =>
 const updateJob = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) throw new AppError("User not found", 400);
   try {
-    const result = await jobService.updateJob(String(req.params.id), req.body);
+    const result = await jobService.updateJob(req.user.id, String(req.params.id), req.body);
     sendResponse(res, {
       statusCode: 200,
       success: true,
@@ -167,6 +171,51 @@ const deleteJob = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const bookmarkJob = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) throw new AppError("User not found", 400);
+  try {
+    const result = await jobService.bookmarkJob(req.user.email, String(req.params.id));
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Job bookmarked successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getMyBookmarkedJobs = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) throw new AppError("User not found", 400);
+  try {
+    const result = await jobService.getMyBookmarkedJobs(req.user.email);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Jobs fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const removeMyBookmarkedJob = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) throw new AppError("User not found", 400);
+  try {
+    const result = await jobService.removeMyBookmarkedJob(req.user.email, String(req.params.id));
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Job removed from bookmarks successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const jobController = {
   createJob,
   applyForJob,
@@ -177,4 +226,7 @@ export const jobController = {
   getJobs,
   getJob,
   deleteJob,
+  bookmarkJob,
+  getMyBookmarkedJobs,
+  removeMyBookmarkedJob,
 };
