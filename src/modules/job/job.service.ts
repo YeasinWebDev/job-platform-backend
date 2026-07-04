@@ -373,6 +373,67 @@ const deleteJob = async (id: string) => {
   return result;
 };
 
+const updateApplicationStatus = async (applicationId: string, status: string) => {
+  const result = await prisma.application.update({
+    where: { id: applicationId },
+    data: { status: status as any },
+  });
+  return result;
+};
+
+const recruiterApplications = async (email:string, limit: number, page: number, search: string, orderBy: string, contractType: JobContractType) => {
+  const user = await prisma.user.findUnique({where:{email}})
+  if(!user) throw new AppError("User not found",404)
+
+  const recruiter = await prisma.recruiter.findUnique({where:{userId:user.id}})
+  if(!recruiter) throw new AppError("Recruiter not found",404)
+
+  const whereClause = {
+    job:{
+      recruiterId:recruiter.id,
+      title: {
+        contains: search,
+        mode: "insensitive" as const,
+      },
+      ...(contractType && { contract: contractType }),
+    }
+  }
+
+  const result = await prisma.application.findMany({
+    take: limit,
+    skip: (page - 1) * limit,
+    where: whereClause,
+    include:{
+      job:true,
+      user:{
+        include:{
+          userInfo:{
+            select:{
+              resume:true
+            }
+          }
+        }
+      }
+    },
+    orderBy: {
+      [orderBy || "createdAt"]: "desc",
+    },
+  })
+
+  const total = await prisma.application.count({
+    where: whereClause,
+  })
+
+  const meta = {
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  }
+
+  return { applications: result, meta }
+}
+
 export const jobService = {
   createJob,
   applyForJob,
@@ -386,4 +447,6 @@ export const jobService = {
   bookmarkJob,
   getMyBookmarkedJobs,
   removeMyBookmarkedJob,
+  recruiterApplications,
+  updateApplicationStatus,
 };

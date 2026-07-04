@@ -73,3 +73,17 @@ export const userOverView = async (req: Request, res: Response, next: NextFuncti
     next(error);
   }
 };
+
+export const recruiterOverView = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await userService.recruiterOverView(req.user!.email);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Recruiter overview fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

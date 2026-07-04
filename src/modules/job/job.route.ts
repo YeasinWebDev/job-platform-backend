@@ -11,6 +11,10 @@ jobRoutes.post("/apply-for-job", checkAuth(Role.USER, Role.ADMIN), jobController
 
 jobRoutes.post("/bookMarkJob/:id", checkAuth(Role.USER, Role.ADMIN), jobController.bookmarkJob);
 
+jobRoutes.get("/recruiter-applications", checkAuth(Role.RECRUITER, Role.ADMIN), jobController.getRecruiterApplications);
+
+jobRoutes.put("/update-application-status/:id", checkAuth(Role.RECRUITER, Role.ADMIN), jobController.updateApplicationStatus);
+
 jobRoutes.get("/my-applications", checkAuth(Role.USER, Role.ADMIN), jobController.myApplications);
 
 jobRoutes.get("/my-created-jobs", checkAuth(Role.RECRUITER, Role.ADMIN), jobController.myCreatedJobs);

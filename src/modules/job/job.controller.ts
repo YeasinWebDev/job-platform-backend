@@ -216,6 +216,44 @@ const removeMyBookmarkedJob = async (req: Request, res: Response, next: NextFunc
   }
 };
 
+const updateApplicationStatus = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) throw new AppError("User not found", 400);
+  try {
+    const result = await jobService.updateApplicationStatus(String(req.params.id), req.body.status);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Application status updated successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getRecruiterApplications = async (req:Request, res:Response, next:NextFunction) => {
+  if(!req.user) throw new AppError("User not found",400)
+  try {
+    const { limit = "10", page = "1", search = "", orderBy, contractType } = req.query;
+    const result = await jobService.recruiterApplications(
+      req.user.email,
+      parseInt(limit as string) || 10,
+      parseInt(page as string) || 1,
+      search as string,
+      orderBy as string,
+      contractType as JobContractType,
+    )
+    sendResponse(res,{
+      statusCode:200,
+      success:true,
+      message:"Applications fetched successfully",
+      data:result
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
 export const jobController = {
   createJob,
   applyForJob,
@@ -229,4 +267,6 @@ export const jobController = {
   bookmarkJob,
   getMyBookmarkedJobs,
   removeMyBookmarkedJob,
+  getRecruiterApplications,
+  updateApplicationStatus,
 };

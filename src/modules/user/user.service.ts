@@ -202,4 +202,89 @@ const userOverView=async(email:string)=>{
   };
 }
 
-export const userService = { getMe,getMyApplications, deleteUser, updateProfileInfo,userOverView };
+const recruiterOverView = async(email:string)=>{
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    throw new AppError("User not found", 400);
+  }
+
+  const recruiter = await prisma.recruiter.findUnique({
+    where: { userId: user.id },
+  });
+
+  if (!recruiter) {
+    throw new AppError("Recruiter not found", 400);
+  }
+
+  const [totalJobsPosted, totalApplications, totalShortlisted, recentApplications, activeJobs, remoteCount, onsiteCount, fulltimeCount, partTimeCount, internshipCount] = await Promise.all([
+    prisma.job.count({
+      where: { recruiterId: recruiter.id, isDeleted: false },
+    }),
+    prisma.application.count({
+      where: { job: { recruiterId: recruiter.id, isDeleted: false } },
+    }),
+    prisma.application.count({
+      where: { job: { recruiterId: recruiter.id, isDeleted: false }, status: "SHORTLISTED" },
+    }),
+    prisma.application.findMany({
+      where: { job: { recruiterId: recruiter.id, isDeleted: false } },
+      take: 4,
+      orderBy: { createdAt: "desc" },
+      include: {
+        job: {
+          include: {
+            recruiter: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    }),
+    prisma.job.count({
+      where: { recruiterId: recruiter.id, isDeleted: false, status: "ACTIVE" },
+    }),
+    prisma.application.count({
+      where: { job: { recruiterId: recruiter.id, isDeleted: false, jobType: "REMOTE" } },
+    }),
+    prisma.application.count({
+      where: { job: { recruiterId: recruiter.id, isDeleted: false, jobType: "ONSITE" } },
+    }),
+    prisma.application.count({
+      where: { job: { recruiterId: recruiter.id, isDeleted: false, contract: "FULLTIME" } },
+    }),
+    prisma.application.count({
+      where: { job: { recruiterId: recruiter.id, isDeleted: false, contract: "PARTTIME" } },
+    }),
+    prisma.application.count({
+      where: { job: { recruiterId: recruiter.id, isDeleted: false, contract: "INTERNSHIP" } },
+    }),
+  ]);
+
+
+  return {
+    totalJobsPosted,
+    totalApplications,
+    totalShortlisted,
+    activeJobs,
+    recentApplications,
+    applicationByType: {
+      REMOTE: remoteCount,
+      ONSITE: onsiteCount,
+    },
+    applicationByContract: {
+      FULLTIME: fulltimeCount,
+      PARTTIME: partTimeCount,
+      INTERNSHIP: internshipCount,
+    },
+  };
+}
+
+  export const userService = { getMe,getMyApplications, deleteUser, updateProfileInfo,userOverView, recruiterOverView };
