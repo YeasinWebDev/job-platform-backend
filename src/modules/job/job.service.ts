@@ -1,4 +1,4 @@
-import { JobStatus, type ExperienceLevel, type Job, type JobContractType, type JobType } from "@prisma/client";
+import { ApplicationStatus, JobStatus, type ExperienceLevel, type Job, type JobContractType, type JobType } from "@prisma/client";
 import prisma from "../../config/prisma.js";
 import { normalizeContract } from "../../utils/index.js";
 import AppError from "../../helper/appError.js";
@@ -368,6 +368,144 @@ const getJob = async (id: string) => {
   return ans;
 };
 
+const allApplications = async (limit: number, page: number) => {
+  const [applications, total] = await Promise.all([
+    prisma.application.findMany({
+      take: limit,
+      skip: (page - 1) * limit,
+      include: {
+        job: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+    prisma.application.count(),
+  ]);
+
+  const meta = {
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
+
+  return { applications, meta };
+};
+
+const getTopRecruiters = async (limit: number = 3) => {
+  const recruiters = await prisma.recruiter.findMany({
+    take: limit,
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+      _count: {
+        select: {
+          jobs: {
+            where: { isDeleted: false },
+          },
+        },
+      },
+    },
+    orderBy: {
+      jobs: {
+        _count: "desc",
+      },
+    },
+  });
+
+  return recruiters.map((r) => ({
+    id: r.id,
+    companyName: r.companyName,
+    companyImage: r.companyImage,
+    name: r.user.name,
+    email: r.user.email,
+    totalJobs: r._count.jobs,
+  }));
+};
+
+const getJobStatusBreakdown = async () => {
+  const [active, pending, hold, expired, total] = await Promise.all([
+    prisma.job.count({ where: { isDeleted: false, status: "ACTIVE" } }),
+    prisma.job.count({ where: { isDeleted: false, status: "PENDING_PAYMENT" } }),
+    prisma.job.count({ where: { isDeleted: false, status: "HOLD" } }),
+    prisma.job.count({ where: { isDeleted: false, status: "EXPIRED" } }),
+    prisma.job.count({ where: { isDeleted: false } }),
+  ]);
+
+  return {
+    total,
+    active,
+    pending,
+    hold,
+    expired,
+  };
+};
+
+const allJobs = async (limit: number, page: number) => {
+  const whereClause = {
+    isDeleted: false,
+  };
+
+  const [jobs, total] = await Promise.all([
+    prisma.job.findMany({
+      take: limit,
+      skip: (page - 1) * limit,
+      where: whereClause,
+      include: {
+        recruiter: {
+          select: {
+            companyName: true,
+            companyImage: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+        category: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+    prisma.job.count({
+      where: whereClause,
+    }),
+  ]);
+
+  const meta = {
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
+
+  return { jobs, meta };
+};
+
 const deleteJob = async (id: string) => {
   const result = await prisma.job.update({ where: { id }, data: { isDeleted: true } });
   return result;
@@ -376,7 +514,7 @@ const deleteJob = async (id: string) => {
 const updateApplicationStatus = async (applicationId: string, status: string) => {
   const result = await prisma.application.update({
     where: { id: applicationId },
-    data: { status: status as any },
+    data: { status: status as ApplicationStatus },
   });
   return result;
 };
@@ -443,6 +581,10 @@ export const jobService = {
   updateJobStatus,
   getJobs,
   getJob,
+  allJobs,
+  allApplications,
+  getJobStatusBreakdown,
+  getTopRecruiters,
   deleteJob,
   bookmarkJob,
   getMyBookmarkedJobs,

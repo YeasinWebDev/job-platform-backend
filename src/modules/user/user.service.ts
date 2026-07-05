@@ -1,4 +1,4 @@
-import type { ApplicationStatus } from "@prisma/client";
+import type { ApplicationStatus, Role, UserStatus } from "@prisma/client";
 import prisma from "../../config/prisma.js";
 import AppError from "../../helper/appError.js";
 
@@ -56,10 +56,10 @@ const getMyApplications = async (email: string, limit: number, page: number, sea
       where: whereClause,
       include: {
         job: {
-          include:{
-            recruiter:true,
-          }
-        }
+          include: {
+            recruiter: true,
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -137,7 +137,7 @@ const updateProfileInfo = async (email: string, body: any) => {
   }
 };
 
-const userOverView=async(email:string)=>{
+const userOverView = async (email: string) => {
   const user = await prisma.user.findUnique({
     where: { email },
   });
@@ -146,7 +146,7 @@ const userOverView=async(email:string)=>{
     throw new AppError("User not found", 400);
   }
 
-  const [totalJobsApplied, totalJobsSaved ,totalShortlisted, recentApplications, remoteCount, onsiteCount, fulltimeCount, partTimeCount, internshipCount] = await Promise.all([
+  const [totalJobsApplied, totalJobsSaved, totalShortlisted, recentApplications, remoteCount, onsiteCount, fulltimeCount, partTimeCount, internshipCount] = await Promise.all([
     prisma.application.count({
       where: { userId: user.id },
     }),
@@ -163,10 +163,10 @@ const userOverView=async(email:string)=>{
       include: {
         job: {
           include: {
-            recruiter:true
-          }
-        }
-      },  
+            recruiter: true,
+          },
+        },
+      },
     }),
     prisma.application.count({
       where: { userId: user.id, job: { jobType: "REMOTE" } },
@@ -200,9 +200,9 @@ const userOverView=async(email:string)=>{
       INTERNSHIP: internshipCount,
     },
   };
-}
+};
 
-const recruiterOverView = async(email:string)=>{
+const recruiterOverView = async (email: string) => {
   const user = await prisma.user.findUnique({
     where: { email },
   });
@@ -219,55 +219,55 @@ const recruiterOverView = async(email:string)=>{
     throw new AppError("Recruiter not found", 400);
   }
 
-  const [totalJobsPosted, totalApplications, totalShortlisted, recentApplications, activeJobs, remoteCount, onsiteCount, fulltimeCount, partTimeCount, internshipCount] = await Promise.all([
-    prisma.job.count({
-      where: { recruiterId: recruiter.id, isDeleted: false },
-    }),
-    prisma.application.count({
-      where: { job: { recruiterId: recruiter.id, isDeleted: false } },
-    }),
-    prisma.application.count({
-      where: { job: { recruiterId: recruiter.id, isDeleted: false }, status: "SHORTLISTED" },
-    }),
-    prisma.application.findMany({
-      where: { job: { recruiterId: recruiter.id, isDeleted: false } },
-      take: 4,
-      orderBy: { createdAt: "desc" },
-      include: {
-        job: {
-          include: {
-            recruiter: true,
+  const [totalJobsPosted, totalApplications, totalShortlisted, recentApplications, activeJobs, remoteCount, onsiteCount, fulltimeCount, partTimeCount, internshipCount] =
+    await Promise.all([
+      prisma.job.count({
+        where: { recruiterId: recruiter.id, isDeleted: false },
+      }),
+      prisma.application.count({
+        where: { job: { recruiterId: recruiter.id, isDeleted: false } },
+      }),
+      prisma.application.count({
+        where: { job: { recruiterId: recruiter.id, isDeleted: false }, status: "SHORTLISTED" },
+      }),
+      prisma.application.findMany({
+        where: { job: { recruiterId: recruiter.id, isDeleted: false } },
+        take: 4,
+        orderBy: { createdAt: "desc" },
+        include: {
+          job: {
+            include: {
+              recruiter: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
           },
         },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    }),
-    prisma.job.count({
-      where: { recruiterId: recruiter.id, isDeleted: false, status: "ACTIVE" },
-    }),
-    prisma.application.count({
-      where: { job: { recruiterId: recruiter.id, isDeleted: false, jobType: "REMOTE" } },
-    }),
-    prisma.application.count({
-      where: { job: { recruiterId: recruiter.id, isDeleted: false, jobType: "ONSITE" } },
-    }),
-    prisma.application.count({
-      where: { job: { recruiterId: recruiter.id, isDeleted: false, contract: "FULLTIME" } },
-    }),
-    prisma.application.count({
-      where: { job: { recruiterId: recruiter.id, isDeleted: false, contract: "PARTTIME" } },
-    }),
-    prisma.application.count({
-      where: { job: { recruiterId: recruiter.id, isDeleted: false, contract: "INTERNSHIP" } },
-    }),
-  ]);
-
+      }),
+      prisma.job.count({
+        where: { recruiterId: recruiter.id, isDeleted: false, status: "ACTIVE" },
+      }),
+      prisma.application.count({
+        where: { job: { recruiterId: recruiter.id, isDeleted: false, jobType: "REMOTE" } },
+      }),
+      prisma.application.count({
+        where: { job: { recruiterId: recruiter.id, isDeleted: false, jobType: "ONSITE" } },
+      }),
+      prisma.application.count({
+        where: { job: { recruiterId: recruiter.id, isDeleted: false, contract: "FULLTIME" } },
+      }),
+      prisma.application.count({
+        where: { job: { recruiterId: recruiter.id, isDeleted: false, contract: "PARTTIME" } },
+      }),
+      prisma.application.count({
+        where: { job: { recruiterId: recruiter.id, isDeleted: false, contract: "INTERNSHIP" } },
+      }),
+    ]);
 
   return {
     totalJobsPosted,
@@ -285,6 +285,56 @@ const recruiterOverView = async(email:string)=>{
       INTERNSHIP: internshipCount,
     },
   };
+};
+
+const allUsers = async (limit:number,page:number) =>{
+  const result = await prisma.user.findMany({
+    take: limit,
+    skip: (page - 1) * limit,
+    where:{
+      role:{notIn:["ADMIN"]}
+    }
+  })
+  const total = await prisma.user.count({
+    where:{
+      role:{notIn:["ADMIN"]}
+    }
+  })
+  const meta = {
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  }
+  return {users:result,meta}
 }
 
-  export const userService = { getMe,getMyApplications, deleteUser, updateProfileInfo,userOverView, recruiterOverView };
+const changeUserRole = async (email:string,role:Role) =>{
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+  if (!user) {
+    throw new AppError("User not found", 400);
+  }
+  const result = await prisma.user.update({
+    where: { id: user.id },
+    data: { role },
+  })
+  return result
+}
+
+const changeUserStatus = async (email:string,status:UserStatus) =>{
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+  if (!user) {
+    throw new AppError("User not found", 400);
+  }
+  const result = await prisma.user.update({
+    where: { id: user.id },
+    data: { status },
+  })
+  return result
+}
+
+export const userService = { getMe, getMyApplications, deleteUser, updateProfileInfo, userOverView, recruiterOverView,allUsers,changeUserRole,changeUserStatus };

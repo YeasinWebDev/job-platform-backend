@@ -87,3 +87,46 @@ export const recruiterOverView = async (req: Request, res: Response, next: NextF
     next(error);
   }
 };
+
+export const allUsers = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await userService.allUsers(Number(req.query.limit), Number(req.query.page));
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Users fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changeUserRole = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await userService.changeUserRole(req.body.email, req.body.role);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "User role changed successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+export const changeUserStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await userService.changeUserStatus(req.body.email, req.body.status);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "User status changed successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

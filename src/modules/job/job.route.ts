@@ -23,6 +23,14 @@ jobRoutes.put("/update-job/:id", checkAuth(Role.RECRUITER, Role.ADMIN), jobContr
 
 jobRoutes.put("/update-job-status/:id", checkAuth(Role.RECRUITER, Role.ADMIN), jobController.updateJobStatus);
 
+jobRoutes.get("/all-applications", checkAuth(Role.ADMIN), jobController.allApplications);
+
+jobRoutes.get("/top-recruiters", checkAuth(Role.ADMIN), jobController.getTopRecruiters);
+
+jobRoutes.get("/status-breakdown", checkAuth(Role.ADMIN), jobController.getJobStatusBreakdown);
+
+jobRoutes.get("/all", checkAuth(Role.ADMIN), jobController.allJobs);
+
 jobRoutes.get("/", jobController.getJobs);
 
 jobRoutes.get("/myBookmarkJobs", checkAuth(Role.USER, Role.ADMIN), jobController.getMyBookmarkedJobs);

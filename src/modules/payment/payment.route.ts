@@ -7,3 +7,4 @@ export const paymentRoutes = Router()
 
 paymentRoutes.post("/create-payment-intent",checkAuth(Role.RECRUITER, Role.ADMIN), paymentController.createPaymentIntent);
 
+paymentRoutes.get("/total-revenue",checkAuth(Role.ADMIN), paymentController.getTotalRevenue);

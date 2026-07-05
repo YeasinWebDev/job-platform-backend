@@ -157,6 +157,65 @@ const getJob = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const getJobStatusBreakdown = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await jobService.getJobStatusBreakdown();
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Job status breakdown fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const allApplications = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { limit = "10", page = "1" } = req.query;
+    const result = await jobService.allApplications(parseInt(limit as string) || 10, parseInt(page as string) || 1);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "All applications fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getTopRecruiters = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { limit = "5" } = req.query;
+    const result = await jobService.getTopRecruiters(parseInt(limit as string) || 5);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Top recruiters fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const allJobs = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { limit = "10", page = "1" } = req.query;
+    const result = await jobService.allJobs(parseInt(limit as string) || 10, parseInt(page as string) || 1);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "All jobs fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const deleteJob = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await jobService.deleteJob(String(req.params.id));
@@ -263,6 +322,10 @@ export const jobController = {
   updateJobStatus,
   getJobs,
   getJob,
+  allJobs,
+  allApplications,
+  getJobStatusBreakdown,
+  getTopRecruiters,
   deleteJob,
   bookmarkJob,
   getMyBookmarkedJobs,

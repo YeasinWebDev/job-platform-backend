@@ -40,4 +40,18 @@ const checkWebhook = async (req: Request, res: Response, next: NextFunction) => 
 
 };
 
-export const paymentController = { createPaymentIntent, checkWebhook };
+const getTotalRevenue = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await paymentService.getTotalRevenue();
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Total revenue fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const paymentController = { createPaymentIntent, checkWebhook, getTotalRevenue };

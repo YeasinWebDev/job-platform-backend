@@ -66,7 +66,20 @@ const checkWebhook = async (event: Stripe.Event) => {
   return false;
 };
 
+const getTotalRevenue = async () => {
+  const result = await prisma.payment.aggregate({
+    _sum: {
+      amount: true,
+    },
+    where: {
+      status: "SUCCESS",
+    },
+  });
+  return { totalRevenue: result._sum.amount };
+};
+
 export const paymentService = {
   createPaymentIntent,
   checkWebhook,
+  getTotalRevenue
 };
