@@ -22,6 +22,7 @@ model User {
   bookmarkJobs   Job[]         @relation("BookmarkedJobs")
   recruiter      Recruiter?
   userInfo       UserInfo?
+  interviewPreparations InterviewPreparation[]
 }
 
 model Recruiter {

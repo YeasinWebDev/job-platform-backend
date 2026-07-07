@@ -30,6 +30,7 @@ model Job {
   applications       Application[]
   payment            Payment?
   bookmarkedBy User[] @relation("BookmarkedJobs")
+  interviewPreparations InterviewPreparation[]
 }
 
 model Category {

@@ -1,0 +1,16 @@
+model InterviewPreparation {
+  id              String   @id @default(uuid())
+  jobId           String
+  userId          String
+  questions       String[]
+  tips            String[]
+  difficulty      String
+  topics          String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  job             Job      @relation(fields: [jobId], references: [id])
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, jobId])
+}

@@ -9,6 +9,7 @@ import { paymentRoutes } from "./modules/payment/payment.route.js";
 import { paymentController } from "./modules/payment/payment.controller.js";
 import { categoryRoutes } from "./modules/category/category.route.js";
 import { userRoutes } from "./modules/user/user.route.js";
+import interviewRoutes from "./modules/interview/interview.route.js"; 
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/job", jobRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/category", categoryRoutes);
+app.use("/api/v1/interview", interviewRoutes);
 
 
 
