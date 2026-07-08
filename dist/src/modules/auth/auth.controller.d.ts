@@ -1,0 +1,8 @@
+import type { NextFunction, Request, Response } from "express";
+export declare const authController: {
+    registerUser: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    loginUser: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    sendVerificationEmail: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    verifyEmail: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+};
+//# sourceMappingURL=auth.controller.d.ts.map

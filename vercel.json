@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "buildCommand": "npx prisma generate && npx tsc",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "functions": {
+    "api/index.ts": {
+      "memory": 512,
+      "maxDuration": 30
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/v1/payment/webhook",
+      "dest": "/api/index.ts",
+      "methods": ["POST"]
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.ts"
+    }
+  ]
+}

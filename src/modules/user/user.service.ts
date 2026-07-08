@@ -36,6 +36,7 @@ const getMyApplications = async (email: string, limit: number, page: number, sea
     userId: user.id,
   };
 
+  // @ts-ignore
   if (status && status !== "null") {
     whereClause.status = status;
   }
